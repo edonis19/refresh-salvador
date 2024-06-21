@@ -183,6 +183,28 @@ class InterventiStateRepository extends _$InterventiStateRepository {
     for (var ei in erpinterventi) {
       final index = interventi.indexWhere((i) => i.idTestata == ei.idTestata);
       if (index > -1) {
+        if (!interventi[index].isDirty)
+        {
+          interventi[index] = ei;
+        }
+      } else {
+        interventi.add(ei);
+      }
+    }
+
+    state = AsyncData(interventi);
+  }
+
+    void updateInterventiCloseErp(List<Intervento> erpinterventi) async {
+    // todo - Please check this logic. I think here you wanted to reload everything not just the erp interventi
+    var interventiDb = ref.read(interventiDbOpRepositoryProvider.notifier);
+    await interventiDb.updateInterventiErp(erpinterventi);
+
+    // from what i see here is a sync of interventi from the erp. what should happen to the interventi in localdb with same id?
+    var interventi = state.asData!.value;
+    for (var ei in erpinterventi) {
+      final index = interventi.indexWhere((i) => i.idTestata == ei.idTestata);
+      if (index > -1) {
         interventi[index] = ei;
       } else {
         interventi.add(ei);

@@ -19,7 +19,7 @@ class SidebarXMenus extends ConsumerWidget {
     var userMenuItems = ref.watch(userMenuControllerProvider);
 
     var items = userMenuItems
-        .where((umi) => ['Nuovo Intervento', 'Interventi Aperti', 'Sync']
+        .where((umi) => ['Nuovo Intervento', 'Interventi Aperti', 'Interventi Modificati']
             .contains(umi.label))
         .map((umi) {
       var sidebarxitem =

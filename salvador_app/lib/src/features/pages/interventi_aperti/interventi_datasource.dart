@@ -176,7 +176,7 @@ DataGridRowAdapter buildRow(DataGridRow row) {
                                     ],
                                   ),
           content: const Text(
-                                    'Sei sicuro di voler chiudere la giornata?',
+                                    'Sei sicuro di voler eliminare l\'intervento?',
                                     textAlign: TextAlign.center,
                                   ),
                                            actions: <Widget>[

@@ -1,11 +1,13 @@
 // ignore_for_file: unnecessary_null_comparison, use_build_context_synchronously, unnecessary_string_interpolations
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mailer/src/entities/address.dart' as prefix;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:salvador_task_management/src/config/providers.dart';
 import 'package:salvador_task_management/src/features/main_view/main_view.dart';
@@ -37,6 +39,7 @@ import 'package:roundcheckbox/roundcheckbox.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 // ignore: must_be_immutable
 class RegistrazioneInterventoPage extends ConsumerWidget {
@@ -676,7 +679,7 @@ class RegistrazioneInterventoPage extends ConsumerWidget {
                                       interventiStateRepositoryProvider
                                           .notifier);
                                   interventiDbNotifierErp
-                                      .updateInterventiErp(interventiErp);
+                                      .updateInterventiCloseErp(interventiErp);
 
                                   Navigator.of(context).pop();
 
@@ -2062,160 +2065,225 @@ class RegistrazioneInterventoPage extends ConsumerWidget {
     );
   }
 
-  void _showAggiungiArticoloDialog(
-      BuildContext context, WidgetRef ref, Intervento intervento) {
-    String searchQuery = '';
-    final TextEditingController searchController = TextEditingController();
+void _showAggiungiArticoloDialog(
+    BuildContext context, WidgetRef ref, Intervento intervento) {
+  String searchQuery = '';
+  final TextEditingController searchController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.construction),
+                SizedBox(width: 2),
+                Text('Articoli'),
+              ],
+            ),
+            content: SizedBox(
+              width: 400,
+              height: 400,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.construction),
-                  SizedBox(width: 2),
-                  Text('Articoli'),
-                ],
-              ),
-              content: SizedBox(
-                width: 400,
-                height: 400,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: searchController,
-                            autofocus: true,
-                            onChanged: (value) {
-                              setState(() {
-                                searchQuery = value;
-                              });
-                              ref
-                                  .read(articoliControllerProvider.notifier)
-                                  .applyFilterArticoli(filterText: value);
-                            },
-                            onSubmitted: (_) async {
-                              //                   var ultimaModifica = DateTime.now();
-                              // var prefs = await ref.read(sharedPreferencesProvider.future);
-                              // final operatore = prefs.getString('user')?.toUpperCase();
-                              //                     var interventiDbProvider =
-                              //             ref.read(interventoApertoStateProvider.notifier);
-                              //             interventiDbProvider.updateInterventoModifica(operatoreModifica: operatore, ultimaModifica: ultimaModifica);
-
-                              _aggiungiArticoloIfSingle(
-                                  context, ref, intervento);
-                            },
-                            decoration: InputDecoration(
-                              labelText: 'Cerca per codice o descrizione',
-                              prefixIcon: const Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                                borderSide:
-                                    const BorderSide(color: Colors.orange),
-                              ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: searchController,
+                          autofocus: true,
+                          onChanged: (value) {
+                            setState(() {
+                              searchQuery = value;
+                            });
+                            ref
+                                .read(articoliControllerProvider.notifier)
+                                .applyFilterArticoli(filterText: value);
+                          },
+                          onSubmitted: (_) async {
+                            _aggiungiArticoloIfSingle(context, ref, intervento);
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Cerca per codice o descrizione',
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
                             ),
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              color: Colors.black,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide:
+                                  const BorderSide(color: Colors.orange),
                             ),
                           ),
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.black,
+                          ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    ref.watch(articoliControllerProvider).when(
-                          data: (data) {
-                            if (searchQuery.isEmpty) {
-                              return const SizedBox();
-                            } else {
-                              final filteredData = data.where((articolo) {
-                                final codice =
-                                    articolo.codice.toString().toLowerCase();
-                                final descrizione = articolo.descrizione
-                                    .toString()
-                                    .toLowerCase();
-                                final searchWords =
-                                    searchQuery.toLowerCase().split(' ');
-                                return searchWords.every((word) =>
-                                    codice.contains(word) ||
-                                    descrizione.contains(word));
-                              }).toList();
-
-                              return Expanded(
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: filteredData.length,
-                                  itemBuilder: (context, index) {
-                                    var articolo = filteredData[index];
-                                    //final articoloJson = articoloObj.toJson();
-                                    //final articolo =
-                                    //    InterventoArticoloState.fromJson(
-                                    //        articoloJson);
-                                    return ListTile(
-                                      title: Text(articolo.descrizione),
-                                      subtitle: Text(articolo.codice),
-                                      onTap: () {
-                                        final intervento = ref.read(
-                                            interventoApertoStateProvider);
-                                        _showAggiungiDettagliDialog(
-                                            context, articolo, intervento, ref);
-                                      },
-                                    );
-                                  },
-                                ),
-                              );
-                            }
-                          },
-                          loading: () => const CircularProgressIndicator(),
-                          error: (error, stackTrace) {
-                            return Text('Error: $error');
-                          },
-                        ),
-                  ],
-                ),
-              ),
-              actions: [
-                Container(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: ButtonStyle(
-                      side: WidgetStateProperty.all<BorderSide>(
-                        const BorderSide(color: Colors.grey),
                       ),
-                      minimumSize: WidgetStateProperty.all<Size>(
-                          const Size(double.infinity, 60)),
+                      IconButton(
+                        icon: Icon(Icons.qr_code_scanner),
+                        onPressed: () async {
+                          String? qrCode = await scanQRCode(context);
+                          if (qrCode != null) {
+                            searchController.text = qrCode;
+                            setState(() {
+                              searchQuery = qrCode;
+                            });
+                            ref
+                                .read(articoliControllerProvider.notifier)
+                                .applyFilterArticoli(filterText: qrCode);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ref.watch(articoliControllerProvider).when(
+                        data: (data) {
+                          if (searchQuery.isEmpty) {
+                            return const SizedBox();
+                          } else {
+                            final filteredData = data.where((articolo) {
+                              final codice =
+                                  articolo.codice.toString().toLowerCase();
+                              final descrizione =
+                                  articolo.descrizione.toString().toLowerCase();
+                              final searchWords =
+                                  searchQuery.toLowerCase().split(' ');
+                              return searchWords.every((word) =>
+                                  codice.contains(word) ||
+                                  descrizione.contains(word));
+                            }).toList();
+
+                            return Expanded(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: filteredData.length,
+                                itemBuilder: (context, index) {
+                                  var articolo = filteredData[index];
+                                  return ListTile(
+                                    title: Text(articolo.descrizione),
+                                    subtitle: Text(articolo.codice),
+                                    onTap: () {
+                                      final intervento = ref.read(
+                                          interventoApertoStateProvider);
+                                      _showAggiungiDettagliDialog(
+                                          context, articolo, intervento, ref);
+                                    },
+                                  );
+                                },
+                              ),
+                            );
+                          }
+                        },
+                        loading: () => const CircularProgressIndicator(),
+                        error: (error, stackTrace) {
+                          return Text('Error: $error');
+                        },
+                      ),
+                ],
+              ),
+            ),
+            actions: [
+              Container(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ButtonStyle(
+                    side: MaterialStateProperty.all<BorderSide>(
+                      const BorderSide(color: Colors.grey),
                     ),
-                    child: const Text(
-                      'Chiudi',
-                      style: TextStyle(color: Colors.black),
-                    ),
+                    minimumSize: MaterialStateProperty.all<Size>(
+                        const Size(double.infinity, 60)),
+                  ),
+                  child: const Text(
+                    'Chiudi',
+                    style: TextStyle(color: Colors.black),
                   ),
                 ),
-              ],
-            );
-          },
-        );
-      },
-    );
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 
-    Future.delayed(Duration.zero, () {
-      FocusScope.of(context).requestFocus(FocusNode());
-      searchController.clear();
-    });
-  }
+  Future.delayed(Duration.zero, () {
+    FocusScope.of(context).requestFocus(FocusNode());
+    searchController.clear();
+  });
+}
+
+
+Future<String?> scanQRCode(BuildContext context) async {
+  String? scannedCode;
+  Completer<String?> completer = Completer<String?>();
+
+  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  QRViewController? qrController;
+
+  await showDialog<String?>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        contentPadding: EdgeInsets.zero, // Rimuove il padding del contenuto
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.qr_code, size: 28), // Icona QR Code
+            SizedBox(width: 8),
+            Text('Scan QR Code'), // Titolo centrato
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          height: 400,
+          child: QRView(
+            key: qrKey,
+            onQRViewCreated: (controller) {
+              qrController = controller;
+              qrController!.scannedDataStream.listen((scanData) {
+                if (!completer.isCompleted) {
+                  completer.complete(scanData.code);
+                  scannedCode = scanData.code;
+                  Navigator.pop(context);
+                }
+              });
+            },
+          ),
+        ),
+        actions: <Widget>[
+          Container(
+            width: double.infinity, // Rende il bottone largo tutta la finestra
+            child: TextButton(
+              child: Text('Annulla'),
+              onPressed: () {
+                if (!completer.isCompleted) {
+                  completer.complete(null); // Completa con null se l'utente annulla
+                }
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  qrController?.dispose(); // Assicura che le risorse della fotocamera siano liberate
+
+  return completer.future;
+}
+
+
 
   void _aggiungiArticoloIfSingle(
       BuildContext context, WidgetRef ref, Intervento intervento) async {
@@ -2518,11 +2586,11 @@ class RegistrazioneInterventoPage extends ConsumerWidget {
                             await ref.read(sharedPreferencesProvider.future);
                         final operatore =
                             prefs.getString('user')?.toUpperCase();
-                        var interventiDbProvider =
-                            ref.read(interventoApertoStateProvider.notifier);
-                        interventiDbProvider.updateInterventoModifica(
-                            operatoreModifica: operatore,
-                            ultimaModifica: ultimaModifica);
+                      var interventiDbProvider =
+                          ref.read(interventoApertoStateProvider.notifier);
+                      interventiDbProvider.updateInterventoModifica(
+                          operatoreModifica: operatore,
+                          ultimaModifica: ultimaModifica, status: 'MOD');
 
                         double durationDouble = parseDuration(duration);
 
@@ -2861,7 +2929,7 @@ class RegistrazioneInterventoPage extends ConsumerWidget {
     );
 
     final message = Message()
-      ..from = const Address('tecnico@salvadorsrl.it', 'Tecnico Salvador')
+      ..from = const prefix.Address('tecnico@salvadorsrl.it', 'Tecnico Salvador')
       ..recipients.add('tecnico@salvadorsrl.it')
       ..ccRecipients.add('assistenza@icoldo.it')
       ..subject =
@@ -3579,8 +3647,7 @@ class RegistrazioneInterventoPage extends ConsumerWidget {
                           ref.read(interventoApertoStateProvider.notifier);
                       interventiDbProvider.updateInterventoModifica(
                           operatoreModifica: operatore,
-                          ultimaModifica: ultimaModifica);
-
+                          ultimaModifica: ultimaModifica, status: 'MOD');
                       nuovaNota = controller.text;
 
                       riga.note = nuovaNota;

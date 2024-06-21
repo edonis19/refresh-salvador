@@ -66,6 +66,7 @@ class SettingsView extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              if (!isLoading)
                 Expanded(
                 child: ElevatedButton(
                   onPressed: () {
@@ -87,74 +88,61 @@ class SettingsView extends ConsumerWidget {
                 if (!isLoading)
                 Expanded(
                 child: ElevatedButton(
-                  onPressed: () async {
-                    setState(() {
-                        isLoading = true;
-                      });
+onPressed: () async {
+  setState(() {
+    isLoading = true;
+  });
+
+  if (reset) {
+    var erpdb = await ref.read(erpdbProvider.future);
+    await erpdb.writeAsync((isar) {
+      isar.clear();
+    });
+
+    var localdb = await ref.read(localdbProvider.future);
+    await localdb.writeAsync((isar) {
+      isar.clear();
+    });
+
+    var archividb = await ref.read(archividbProvider.future);
+    await archividb.writeAsync((isar) {
+      isar.clear();
+    });
+  }
+
+  try {
+    // Update items from API
+    var datalimite = await ref.read(dataLimiteRepositoryProvider.future);
+    var utente = 'ADMIN';
+    var rifMatricolaCliente;
+    var data = await ref.read(itemsApiProvider.call(datalimite).future);
+    ref.read(itemDbRepositoryProvider.notifier).updateItems(data);
+
+    // Update data limite
+    ref.read(dataLimiteRepositoryProvider.notifier).updateDataLimite();
+
+    // Update clienti
+    var clienti = await ref.read(clientiApiProvider.future);
+    ref.read(clientiDbRepositoryProvider.notifier).updateClienti(clienti);
+
+    // Update interventi
+    var interventi = await ref.read(interventiApiProvider.call().future);
+    ref.read(interventiStateRepositoryProvider.notifier).updateInterventiErp(interventi);
+
+    // Update elenco matricole
+    var elencoMatricole = await ref.read(elencoMatricoleApiProvider.call(utente, rifMatricolaCliente).future);
+    ref.read(elencoMatricoleDbRepositoryProvider.notifier).updateElencoMatricole(elencoMatricole);
+  } catch (error) {
+    print(error);
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
+    Navigator.of(context).pop(); // Close dialog
+  }
+},
 
 
-                      if (reset) {
-                        var erpdb = await ref.read(erpdbProvider.future);
-                        await erpdb.writeAsync((isar) {
-                          isar.clear();
-                        });
-
-                        var localdb = await ref.read(localdbProvider.future);
-                        await localdb.writeAsync((isar) {
-                          isar.clear();
-                        });
-
-                        var archividb = await ref.read(archividbProvider.future);
-                        await archividb.writeAsync((isar) {
-                          isar.clear();
-                        });
-                        
-                      }
-
-                      try {
-                        var datalimite =
-                            await ref.read(dataLimiteRepositoryProvider.future);
-                        var utente = 'ADMIN';
-                        var rifMatricolaCliente;
-                        var data = await ref
-                            .read(itemsApiProvider.call(datalimite).future);
-                        var itemDbNotifier =
-                            ref.read(itemDbRepositoryProvider.notifier);
-                        itemDbNotifier.updateItems(data);
-
-                        var dataLimiteNotifier =
-                            ref.read(dataLimiteRepositoryProvider.notifier);
-                        dataLimiteNotifier.updateDataLimite();
-
-                        var clienti = await ref.read(clientiApiProvider.future);
-                        var clientiDbNotifier =
-                            ref.read(clientiDbRepositoryProvider.notifier);
-                        clientiDbNotifier.updateClienti(clienti);
-
-                        var interventi =
-                            await ref.read(interventiApiProvider.call().future);
-                        var interventiDbNotifierErp = ref.read(
-                            interventiStateRepositoryProvider.notifier);
-                        interventiDbNotifierErp.updateInterventiErp(
-                            interventi);
-
-                        var elencoMatricole = await ref.read(
-                            elencoMatricoleApiProvider.call(
-                                    utente, rifMatricolaCliente)
-                                .future);
-                        var elencoMatricoleDbNotifier = ref.read(
-                            elencoMatricoleDbRepositoryProvider.notifier);
-                        elencoMatricoleDbNotifier
-                            .updateElencoMatricole(elencoMatricole);
-                      } catch (error) {
-                        print(error);
-                      } finally {
-                        setState(() {
-                          isLoading = false;
-                        });
-                        Navigator.of(context).pop();
-                      }
-                    },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.grey[300],
                     shape: RoundedRectangleBorder(

@@ -21,8 +21,11 @@ class DetailsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-            '${intervento.numDoc} - $dataDocFormatted - ${intervento.cliente?.descrizione}'),
+title: Text(
+  '${intervento.numDoc == null || intervento.numDoc == 'null' ? 'INTERVENTO LOCALE' : intervento.numDoc} - $dataDocFormatted - ${intervento.cliente?.descrizione ?? ''}'
+),
+
+
         backgroundColor: const Color.fromARGB(255, 236, 201, 148),
       ),
       body: SingleChildScrollView(

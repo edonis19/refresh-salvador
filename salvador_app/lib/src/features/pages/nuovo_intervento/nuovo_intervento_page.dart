@@ -94,6 +94,18 @@ class NuovoInterventoPage extends ConsumerWidget {
                           await ref.read(clientiControllerProvider.future);
 final codCliValue = form.control('desCli').value;
 
+// Verifica se è stato selezionato un cliente
+if (codCliValue == null || codCliValue.isEmpty) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('Selezionare una targa per continuare'),
+      backgroundColor: Colors.red,
+    ),
+  );
+  return;
+}
+
+
 final clientiFiltrati = clientiData
     .where((cliente) =>
         cliente.descrizione == codCliValue)
@@ -447,63 +459,6 @@ final clientiFiltrati = clientiData
                                 item.rifMatricolaCliente!.isEmpty ||
                                 item.rifMatricolaCliente!.trim().isEmpty);
 
-                          // return DropdownSearch<ElencoMatricole>(
-                          //   popupProps: PopupProps.menu(
-                          //     showSelectedItems: true,
-                          //     showSearchBox: true,
-                          //     searchFieldProps: TextFieldProps(
-                          //       style: const TextStyle(color: Colors.black),
-                          //       decoration: InputDecoration(
-                          //         border: OutlineInputBorder(
-                          //           borderRadius: BorderRadius.circular(8.0),
-                          //           borderSide:
-                          //               const BorderSide(color: Colors.grey),
-                          //         ),
-                          //         filled: true,
-                          //         fillColor: Colors.white,
-                          //         hintText: "Cerca...",
-                          //         prefixIcon: const Icon(Icons.search),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   items: targaItems,
-                          //   compareFn: compareElencoMatricole,
-                          //   itemAsString: (ElencoMatricole item) =>
-                          //       '${item.rifMatricolaCliente ?? ''} - ${item.descrizione}',
-                          //   dropdownDecoratorProps: DropDownDecoratorProps(
-                          //     dropdownSearchDecoration: InputDecoration(
-                          //       hintText: "SELEZIONA TARGA",
-                          //       hintStyle: const TextStyle(color: Colors.black),
-                          //       fillColor:
-                          //           const Color.fromARGB(255, 255, 255, 255),
-                          //       filled: true,
-                          //       border: OutlineInputBorder(
-                          //         borderRadius: BorderRadius.circular(12.0),
-                          //         borderSide:
-                          //             const BorderSide(color: Colors.black),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   onChanged: (ElencoMatricole? value) {
-                          //     _selectedTarga = value?.rifMatricolaCliente;
-                          //     _selectedMatricola = value?.codice;
-                          //     _selectedCodCli = value?.codCli;
-                          //     _selectedDesCli = value?.desCli;
-                          //     _selectedTelaio = value?.telaio;
-                          //     _selectedId = value?.id;
-                          //     _selectedDescrizione = value?.descrizione;
-                          //     _selectedDataInizio = value?.dataInizio;
-                          //     _selectedDataFine = value?.dataFine;
-                          //     _selectedCodArt = value?.codArt;
-                          //     _selectedMarca = value?.marca;
-                          //     _selectedModello = value?.modello;
-                          //     _selectedRifMatrPadre = value?.rifMatrPadre;
-                          //     _descrClienteController.text = _selectedDesCli!;
-                          //     _telaioController.text = _selectedTelaio!;
-                          //     _matricolaController.text = _selectedMatricola!;
-                          //   },
-                          // );
-
                           return ReactiveDropdownSearch<dynamic,
                               ElencoMatricole>(
                             formControlName: 'targa',
@@ -566,21 +521,6 @@ final clientiFiltrati = clientiData
                       );
                     }))),
                 const SizedBox(height: 40),
-                // TextField(
-                //   controller: _descrClienteController,
-                //   style: const TextStyle(color: Colors.black),
-                //   decoration: InputDecoration(
-                //     hintText: "Cliente",
-                //     hintStyle: const TextStyle(color: Colors.black),
-                //     border: OutlineInputBorder(
-                //       borderRadius: BorderRadius.circular(12.0),
-                //       borderSide: const BorderSide(color: Colors.grey),
-                //     ),
-                //     filled: true,
-                //     fillColor: const Color.fromARGB(255, 255, 255, 255),
-                //   ),
-                //   readOnly: true,
-                // ),
                 ReactiveTextField(
                   formControlName: 'desCli',
                   style: const TextStyle(color: Colors.black),
@@ -597,21 +537,6 @@ final clientiFiltrati = clientiData
                   readOnly: true,
                 ),
                 const SizedBox(height: 40),
-                // TextField(
-                //   controller: _telaioController,
-                //   style: const TextStyle(color: Colors.black),
-                //   decoration: InputDecoration(
-                //     hintText: "Telaio",
-                //     hintStyle: const TextStyle(color: Colors.black),
-                //     border: OutlineInputBorder(
-                //       borderRadius: BorderRadius.circular(12.0),
-                //       borderSide: const BorderSide(color: Colors.grey),
-                //     ),
-                //     filled: true,
-                //     fillColor: const Color.fromARGB(255, 255, 255, 255),
-                //   ),
-                //   readOnly: true,
-                // ),
                 ReactiveTextField(
                   formControlName: 'telaio',
                   style: const TextStyle(color: Colors.black),
@@ -628,21 +553,6 @@ final clientiFiltrati = clientiData
                   readOnly: true,
                 ),
                 const SizedBox(height: 40),
-                // TextField(
-                //   controller: _matricolaController,
-                //   style: const TextStyle(color: Colors.black),
-                //   decoration: InputDecoration(
-                //     hintText: "Matricola",
-                //     hintStyle: const TextStyle(color: Colors.black),
-                //     border: OutlineInputBorder(
-                //       borderRadius: BorderRadius.circular(12.0),
-                //       borderSide: const BorderSide(color: Colors.grey),
-                //     ),
-                //     filled: true,
-                //     fillColor: const Color.fromARGB(255, 255, 255, 255),
-                //   ),
-                //   readOnly: true,
-                // ),
                 ReactiveTextField(
                   formControlName: 'codice',
                   style: const TextStyle(color: Colors.black),

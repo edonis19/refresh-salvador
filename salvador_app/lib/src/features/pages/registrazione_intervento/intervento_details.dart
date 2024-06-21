@@ -58,26 +58,30 @@ class InterventoDetailsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildWarningMessage(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12.0),
-      margin: const EdgeInsets.only(bottom: 16.0),
-      color: Colors.yellow,
-      child: const Row(
-        children: [
-          Icon(Icons.warning, color: Colors.black),
-          SizedBox(width: 8.0),
-          Text(
-            'Attenzione intervento non sincronizzato',
+Widget _buildWarningMessage(BuildContext context) {
+  return Container(
+    padding: const EdgeInsets.all(12.0),
+    margin: const EdgeInsets.only(bottom: 16.0),
+    color: Colors.yellow,
+    child: const Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.warning, color: Colors.black),
+        SizedBox(width: 8.0),
+        Expanded(
+          child: Text(
+            'Attenzione: intervento non sincronizzato. Assicurati di sincronizzare i dati prima di procedere con altre operazioni.',
             style: TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
 
   Future<bool> _showScaffoldMessage() async {
     await Future.delayed(const Duration(seconds: 5));

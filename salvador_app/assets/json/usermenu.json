@@ -28,9 +28,9 @@
                     },
                     {
                         "Leaf": {
-                            "Name": "Sync",
-                            "Process": "Sync",
-                            "Icon": "0xe62f"
+                            "Name": "Interventi Modificati",
+                            "Process": "Interventi Modificati",
+                            "Icon": "0xe21a"
                         }
                     },
                     {
